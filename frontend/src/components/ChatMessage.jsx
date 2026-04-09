@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { BiSolidUser, BiCheckCircle, BiPlay, BiPause } from 'react-icons/bi'
 import './ChatMessage.css'
 
 export default function ChatMessage({ message, index, onListen, onStop, voiceEnabled }) {
@@ -42,13 +43,9 @@ export default function ChatMessage({ message, index, onListen, onStop, voiceEna
       <div className={`message ${isUser ? 'user-message' : 'assistant-message'} ${message.isError ? 'error' : ''}`}>
         <div className="message-avatar">
           {isUser ? (
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"></path>
-            </svg>
+            <BiSolidUser size={24} />
           ) : (
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path>
-            </svg>
+            <BiCheckCircle size={24} />
           )}
         </div>
 
@@ -77,9 +74,7 @@ export default function ChatMessage({ message, index, onListen, onStop, voiceEna
               whileTap={{ scale: 0.95 }}
               title="Listen to this message"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z"></path>
-              </svg>
+              <BiPlay size={16} />
               <span>Listen</span>
             </motion.button>
             <motion.button
@@ -89,10 +84,7 @@ export default function ChatMessage({ message, index, onListen, onStop, voiceEna
               whileTap={{ scale: 0.95 }}
               title="Stop audio"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
+              <BiPause size={16} />
               <span>Stop</span>
             </motion.button>
           </motion.div>

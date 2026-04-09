@@ -1,0 +1,71 @@
+.energy-waveform-container {
+  width: 100%;
+  max-width: 600px;
+  height: 120px;
+  margin: 0 auto 24px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%);
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.energy-waveform-container.dark-mode {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.energy-waveform-container.light-mode {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(34, 197, 94, 0.08) 100%);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+.energy-waveform-canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.energy-waveform-canvas.recording {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+}
+
+.energy-waveform-canvas.speaking {
+  filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.5));
+}
+
+.energy-waveform-canvas.idle {
+  opacity: 0.4;
+  filter: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .energy-waveform-container {
+    max-width: 100%;
+    height: 100px;
+    margin: 0 auto 16px auto;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .energy-waveform-container {
+    height: 80px;
+    margin: 0 auto 12px auto;
+    padding: 6px;
+    border-radius: 8px;
+  }
+
+  .energy-waveform-canvas {
+    border-radius: 6px;
+  }
+}

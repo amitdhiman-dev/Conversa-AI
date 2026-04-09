@@ -6,6 +6,7 @@ from datetime import datetime
 import json
 from io import BytesIO
 import sys
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -25,6 +26,76 @@ model = None
 
 # In-memory conversation history per session
 conversation_history = {}
+
+# ==============================
+# 🗣️ FILLER WORDS & NATURAL SPEECH
+# ==============================
+FILLER_WORDS = [
+    "Well, ",
+    "You know, ",
+    "Actually, ",
+    "I mean, ",
+    "So, ",
+    "Umm, ",
+    "Let me think... ",
+    "Basically, ",
+    "In other words, ",
+    "Sort of, ",
+]
+
+TRANSITION_WORDS = [
+    " I think.",
+    " For sure.",
+    " Right?",
+    " Honestly.",
+    " If you ask me.",
+    " What I mean is, ",
+]
+
+def add_natural_filler_words(response):
+    """Add natural-sounding filler words to make the response feel more conversational"""
+    # Don't add fillers to very short responses
+    if len(response) < 50:
+        return response
+    
+    # Split into sentences
+    sentences = response.split('. ')
+    if len(sentences) < 2:
+        return response
+    
+    # Process sentences, randomly adding fillers
+    processed = []
+    for i, sentence in enumerate(sentences):
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+        
+        # Randomly add filler words to the beginning of some sentences (20% chance)
+        if i > 0 and random.random() < 0.2:
+            filler = random.choice(FILLER_WORDS)
+            # Lowercase first letter if sentence starts with capital
+            if sentence and sentence[0].isupper():
+                sentence = sentence[0].lower() + sentence[1:]
+            sentence = filler + sentence
+        
+        # Randomly add transition words at the end (10% chance last sentence)
+        if i == len(sentences) - 2 and random.random() < 0.3:
+            sentence = sentence + random.choice(TRANSITION_WORDS)
+        
+        processed.append(sentence)
+    
+    # Rejoin with periods and spaces
+    result = '. '.join(processed)
+    
+    # Clean up any double spaces or weird punctuation
+    result = result.replace('  ', ' ')
+    result = result.replace('. .', '.')
+    
+    # Ensure it ends properly
+    if result and not result.endswith('.') and not result.endswith('?'):
+        result += '.'
+    
+    return result
 
 # ==============================
 # 🧠 LOAD LLM
@@ -73,10 +144,14 @@ def ask_llm(messages):
         
         result = response.json()
         ai_response = result["message"]["content"]
+        
+        # Add natural filler words to make the response conversational
+        ai_response_with_fillers = add_natural_filler_words(ai_response)
+        
         print(f"[LLM] SUCCESS - Got response from {LLM_MODEL}", flush=True)
-        print(f"[LLM] Response length: {len(ai_response)} chars", flush=True)
+        print(f"[LLM] Response length: {len(ai_response_with_fillers)} chars", flush=True)
         sys.stdout.flush()
-        return ai_response
+        return ai_response_with_fillers
         
     except requests.exceptions.ConnectionError as e:
         print(f"\n[LLM ERROR] ❌ CONNECTION FAILED", flush=True)
