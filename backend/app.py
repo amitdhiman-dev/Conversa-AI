@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 import json
 from io import BytesIO
+import sys
 
 app = Flask(__name__)
 CORS(app)
@@ -13,7 +14,8 @@ CORS(app)
 # ⚙️ CONFIG
 # ==============================
 AUDIO_FOLDER = "recordings"
-LLM_API = os.getenv("LLM_API", "http://localhost:1234/v1/chat/completions")
+LLM_API = os.getenv("LLM_API", "http://ollama:11434/api/chat")
+LLM_MODEL = os.getenv("LLM_MODEL", "llama3")
 
 # Create recordings folder
 os.makedirs(AUDIO_FOLDER, exist_ok=True)
@@ -46,29 +48,58 @@ def get_fallback_response(user_message):
         return f"That's an interesting question: '{user_message}'. To provide better responses, please configure an LLM API endpoint (like Ollama, OpenAI, or similar). For now, I'm using a basic response system."
 
 def ask_llm(messages):
-    """Send messages to local LLM with fallback"""
+    """Send messages to Ollama LLM with fallback"""
     try:
-        print(f"Attempting to connect to LLM: {LLM_API}")
+        print(f"\n{'='*50}", flush=True)
+        print(f"[LLM] Attempting to connect to: {LLM_API}", flush=True)
+        print(f"[LLM] Model: {LLM_MODEL}", flush=True)
+        print(f"{'='*50}\n", flush=True)
+        sys.stdout.flush()
+        
         response = requests.post(
             LLM_API,
             json={
-                "model": "local-model",
+                "model": LLM_MODEL,
                 "messages": messages,
                 "temperature": 0.7,
-                "max_tokens": 500
+                "stream": False
             },
-            timeout=10
+            timeout=300  # 5 minutes for llama3 (it's slow!)
         )
+        
+        print(f"[LLM] Response status: {response.status_code}", flush=True)
+        sys.stdout.flush()
         response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+        
+        result = response.json()
+        ai_response = result["message"]["content"]
+        print(f"[LLM] SUCCESS - Got response from {LLM_MODEL}", flush=True)
+        print(f"[LLM] Response length: {len(ai_response)} chars", flush=True)
+        sys.stdout.flush()
+        return ai_response
+        
     except requests.exceptions.ConnectionError as e:
-        print(f"LLM Connection Error: Cannot reach {LLM_API}")
-        print("Using fallback response generator...")
-        # Fallback to simple response
-        return get_fallback_response(messages[-1]["content"])
+        print(f"\n[LLM ERROR] ❌ CONNECTION FAILED", flush=True)
+        print(f"[LLM ERROR] Cannot reach: {LLM_API}", flush=True)
+        print(f"[LLM ERROR] Make sure Ollama is running", flush=True)
+        print(f"[LLM ERROR] Details: {str(e)}\n", flush=True)
+        sys.stdout.flush()
+        user_message = messages[-1]["content"] if messages else "your message"
+        return get_fallback_response(user_message)
+        
+    except requests.exceptions.Timeout as e:
+        print(f"\n[LLM ERROR] ❌ TIMEOUT (120+ seconds)", flush=True)
+        print(f"[LLM ERROR] Ollama or model is taking too long", flush=True)
+        print(f"[LLM ERROR] Try again - first request loads model into memory", flush=True)
+        print(f"[LLM ERROR] Details: {str(e)}\n", flush=True)
+        sys.stdout.flush()
+        user_message = messages[-1]["content"] if messages else "your message"
+        return get_fallback_response(user_message)
+        
     except Exception as e:
-        print(f"LLM Error: {e}")
-        # Fallback to simple response
+        print(f"\n[LLM ERROR] ❌ {type(e).__name__}", flush=True)
+        print(f"[LLM ERROR] {str(e)}\n", flush=True)
+        sys.stdout.flush()
         user_message = messages[-1]["content"] if messages else "your message"
         return get_fallback_response(user_message)
 

@@ -1,6 +1,21 @@
 version: '3.8'
 
 services:
+  # Ollama LLM Service
+  ollama:
+    image: ollama/ollama:latest
+    container_name: chatbot-ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+    command: serve
+
   # Backend Flask API
   backend:
     build:
@@ -9,9 +24,11 @@ services:
     container_name: chatbot-backend
     ports:
       - "5000:5000"
+    depends_on:
+      - ollama
     environment:
       - FLASK_ENV=production
-      - LLM_API=http://localhost:1234/v1/chat/completions
+      - LLM_API=http://ollama:11434/api/chat
     volumes:
       - ./backend:/app
     restart: unless-stopped
@@ -37,3 +54,6 @@ services:
 networks:
   chatbot-network:
     driver: bridge
+
+volumes:
+  ollama_data:
