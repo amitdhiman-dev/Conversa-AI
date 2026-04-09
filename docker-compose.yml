@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Backend Flask API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chatbot-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - LLM_API=http://localhost:1234/v1/chat/completions
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chatbot-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - BACKEND_API=http://chatbot-backend:5000
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+
+networks:
+  chatbot-network:
+    driver: bridge
